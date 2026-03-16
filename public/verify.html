@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Certificate Verification — Digital Disruptors 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #050e21;
+    min-height: 100vh;
+    padding: 2.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    background: #0d1f45;
+    border: 1px solid #1e3a6e;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    padding: 2rem;
+    animation: fadeUp .4s ease;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: .3rem;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #4a6a9e;
+    margin-bottom: 1.75rem;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #1e3a6e;
+    margin: 1.25rem 0;
+  }
+
+  .field { margin-bottom: 1rem; }
+
+  .field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #2d4a7a;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .field-value {
+    font-size: 15px;
+    color: #e2eaf8;
+    font-weight: 500;
+  }
+
+  .footer {
+    font-size: 11px;
+    color: #1e3a6e;
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .cert-img-wrap {
+    max-width: 500px;
+    width: 100%;
+    animation: fadeUp .5s ease .1s both;
+  }
+
+  .cert-img {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #1e3a6e;
+    display: block;
+  }
+
+  .error-card {
+    background: #0d1f45;
+    border: 1px solid #3a1e1e;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .error-icon { font-size: 32px; margin-bottom: 12px; }
+
+  .error-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f87171;
+    margin-bottom: 6px;
+  }
+
+  .error-msg {
+    font-size: 13px;
+    color: #4a6a9e;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Error state -->
+  <div class="error-card" id="err" style="display:none">
+    <div class="error-icon">⚠️</div>
+    <div class="error-title">Invalid certificate</div>
+    <div class="error-msg">This QR code doesn't contain valid certificate data.</div>
+  </div>
+
+  <!-- Verified card -->
+  <div class="card" id="main" style="display:none">
+    <div class="badge">
+      <div class="badge-dot"></div>
+      Verified credential
+    </div>
+    <h1 id="cert-title"></h1>
+    <p class="subtitle">Certificate of participation &amp; recognition</p>
+    <hr>
+    <div class="field">
+      <span class="field-label">Receiver name</span>
+      <div class="field-value" id="f-name"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Receiver email</span>
+      <div class="field-value" id="f-email"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Issued by</span>
+      <div class="field-value" id="f-issuedby"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Issued on</span>
+      <div class="field-value" id="f-issuedon"></div>
+    </div>
+    <div class="footer">
+      Issued on Protean X &middot; The Future of Digitally Verifiable Credentials
+    </div>
+  </div>
+
+  <!-- Certificate image -->
+  <div class="cert-img-wrap" id="img-wrap" style="display:none">
+    <img class="cert-img" id="cert-img" alt="Certificate" />
+  </div>
+
+  <script>
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const c = params.get('c');
+      if (!c) throw new Error('No credential data');
+
+      const data = JSON.parse(decodeURIComponent(escape(atob(c))));
+
+      document.getElementById('cert-title').textContent  = data.eventName || 'Certificate';
+      document.getElementById('f-name').textContent      = data.name      || '—';
+      document.getElementById('f-email').textContent     = data.email     || '—';
+      document.getElementById('f-issuedby').textContent  = data.issuedBy  || '—';
+      document.getElementById('f-issuedon').textContent  = data.issuedOn
+        ? new Date(data.issuedOn).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '—';
+
+      document.getElementById('main').style.display = 'block';
+
+      if (data.certImg) {
+        document.getElementById('cert-img').src = data.certImg;
+        document.getElementById('img-wrap').style.display = 'block';
+      }
+    } catch (e) {
+      document.getElementById('err').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
